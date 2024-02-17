@@ -1,0 +1,38 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Deploy Apache on an EC2 instance
+
+Parameters:
+  SampleNetworkStackName:
+    Type: String
+    Description: Name of the existing SampleNetworkCrossStack stack
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Name of an existing EC2 key pair for SSH access
+  InstanceType:
+    Type: String
+    Default: t2.micro
+    Description: EC2 instance type
+
+Mappings:
+  RegionMap:
+    us-west-2:
+      AMI: ami-0c55b159cbfafe1f0
+
+Resources:
+  EC2Instance:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      ImageId: !FindInMap [RegionMap, !Ref 'AWS::Region', AMI]
+      SecurityGroupIds:
+        - !GetAtt SampleNetworkCrossStack.Outputs.WebServerSecurityGroup
+      SubnetId: !GetAtt SampleNetworkCrossStack.Outputs.PublicSubnet
+
+Outputs:
+  PrivateIPv4Address:
+    Description: Private IPv4 address of the EC2 instance
+    Value: !GetAtt EC2Instance.PrivateIp
+  DNSName:
+    Description: DNS name of the EC2 instance
+    Value: !GetAtt EC2Instance.PublicDnsName
